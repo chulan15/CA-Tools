@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RevitForge — Professional Revit Extensions</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0F1E;
+    --bg2: #0D1526;
+    --card: #111827;
+    --card2: #1a2235;
+    --blue: #2563EB;
+    --blue-light: #3b82f6;
+    --cyan: #06B6D4;
+    --cyan-light: #22d3ee;
+    --green: #10b981;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: rgba(37,99,235,0.2);
+    --radius: 12px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; }
+  a { text-decoration:none; color:inherit; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--blue); border-radius:3px; }
+
+  /* NAV */
+  nav {
+    position:fixed; top:0; left:0; right:0; z-index:1000;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 5%; height:70px;
+    background:rgba(10,15,30,0.85);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-logo { display:flex; align-items:center; gap:10px; }
+  .logo-icon {
+    width:38px; height:38px; background:linear-gradient(135deg,var(--blue),var(--cyan));
+    border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:18px; color:#fff;
+  }
+  .logo-text { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; letter-spacing:1px; }
+  .logo-text span { color:var(--cyan); }
+  .nav-links { display:flex; gap:32px; list-style:none; }
+  .nav-links a { font-size:14px; font-weight:500; color:var(--text-muted); transition:color .2s; }
+  .nav-links a:hover { color:var(--cyan); }
+  .nav-actions { display:flex; align-items:center; gap:16px; }
+  .btn-ghost { padding:8px 18px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-weight:500; color:var(--text-muted); transition:all .2s; cursor:pointer; background:transparent; }
+  .btn-ghost:hover { border-color:var(--cyan); color:var(--cyan); }
+  .btn-primary {
+    padding:9px 22px; background:linear-gradient(135deg,var(--blue),var(--cyan));
+    border-radius:8px; font-size:14px; font-weight:600; color:#fff;
+    border:none; cursor:pointer; transition:transform .2s, box-shadow .2s;
+  }
+  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 8px 25px rgba(37,99,235,0.4); }
+  .cart-btn {
+    position:relative; background:var(--card); border:1px solid var(--border);
+    border-radius:10px; padding:9px 14px; cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500;
+  }
+  .cart-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+  .cart-count {
+    position:absolute; top:-6px; right:-6px;
+    background:linear-gradient(135deg,var(--blue),var(--cyan));
+    color:#fff; font-size:10px; font-weight:700; width:18px; height:18px;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    transition:transform .3s; display:none;
+  }
+  .cart-count.show { display:flex; animation:popIn .3s ease; }
+  @keyframes popIn { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
+
+  /* HERO */
+  .hero {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden; padding:100px 5% 60px;
+  }
+  .hero-bg {
+    position:absolute; inset:0; z-index:0;
+    background:
+      linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px);
+    background-size:50px 50px;
+  }
+  .hero-glow {
+    position:absolute; top:20%; left:50%; transform:translate(-50%,-50%);
+    width:600px; height:600px; border-radius:50%;
+    background:radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
+    animation:pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(1)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)} }
+  .hero-content { position:relative; z-index:1; text-align:center; max-width:800px; }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3);
+    border-radius:50px; padding:6px 16px; font-size:13px; font-weight:500;
+    color:var(--cyan); margin-bottom:28px;
+    animation:slideDown .6s ease forwards;
+  }
+  .badge-dot { width:6px; height:6px; border-radius:50%; background:var(--cyan); animation:blink 1.5s ease infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  @keyframes slideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+  .hero h1 {
+    font-family:'Rajdhani',sans-serif; font-size:clamp(42px,7vw,80px);
+    font-weight:700; line-height:1.05; letter-spacing:-1px;
+    animation:slideUp .7s .1s ease forwards; opacity:0;
+  }
+  .hero h1 span { background:linear-gradient(90deg,var(--blue-light),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  .hero p {
+    font-size:18px; color:var(--text-muted); line-height:1.7; margin:20px auto 36px;
+    max-width:560px; animation:slideUp .7s .2s ease forwards; opacity:0;
+  }
+  .hero-btns { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; animation:slideUp .7s .3s ease forwards; opacity:0; }
+  .btn-large { padding:14px 32px; font-size:16px; border-radius:10px; }
+  .hero-stats {
+    display:flex; gap:48px; justify-content:center; margin-top:64px;
+    animation:slideUp .7s .4s ease forwards; opacity:0;
+  }
+  .stat { text-align:center; }
+  .stat-num { font-family:'Rajdhani',sans-serif; font-size:36px; font-weight:700; background:linear-gradient(90deg,var(--blue-light),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .stat-label { font-size:13px; color:var(--text-muted); font-weight:500; }
+  .scan-line {
+    position:absolute; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+    animation:scan 6s linear infinite; opacity:.4;
+  }
+  @keyframes scan { from{top:0} to{top:100%} }
+
+  /* SECTIONS */
+  section { padding:90px 5%; }
+  .section-label { font-size:13px; font-weight:600; color:var(--cyan); letter-spacing:3px; text-transform:uppercase; margin-bottom:12px; }
+  .section-title { font-family:'Rajdhani',sans-serif; font-size:clamp(30px,4vw,46px); font-weight:700; }
+  .section-sub { color:var(--text-muted); font-size:16px; line-height:1.6; margin-top:10px; max-width:520px; }
+  .section-head { margin-bottom:52px; }
+
+  /* CATEGORIES */
+  .categories { background:var(--bg2); }
+  .cat-tabs { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:44px; }
+  .cat-tab {
+    padding:9px 20px; border:1px solid var(--border); border-radius:50px;
+    font-size:14px; font-weight:500; color:var(--text-muted); cursor:pointer;
+    background:transparent; transition:all .2s;
+  }
+  .cat-tab:hover, .cat-tab.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+
+  /* PRODUCT GRID */
+  .products-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:24px; }
+  .product-card {
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    overflow:hidden; transition:transform .3s, box-shadow .3s, border-color .3s;
+    cursor:pointer; position:relative;
+  }
+  .product-card:hover { transform:translateY(-6px); box-shadow:0 20px 50px rgba(37,99,235,0.2); border-color:rgba(37,99,235,0.5); }
+  .product-card.in-cart { border-color:var(--cyan); }
+  .card-badge {
+    position:absolute; top:14px; right:14px; padding:4px 12px;
+    border-radius:50px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+  }
+  .badge-new { background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3); }
+  .badge-hot { background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
+  .badge-sale { background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); }
+  .card-icon {
+    height:160px; display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden;
+  }
+  .card-icon-inner {
+    width:80px; height:80px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+    font-size:38px; position:relative; z-index:1;
+    transition:transform .3s;
+  }
+  .product-card:hover .card-icon-inner { transform:scale(1.1) rotate(3deg); }
+  .card-glow { position:absolute; width:150px; height:150px; border-radius:50%; filter:blur(40px); opacity:.3; }
+  .card-body { padding:22px; }
+  .card-category { font-size:11px; font-weight:600; color:var(--cyan); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+  .card-name { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; margin-bottom:8px; }
+  .card-desc { font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; }
+  .card-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; }
+  .tag { padding:3px 10px; background:rgba(37,99,235,0.1); border:1px solid rgba(37,99,235,0.2); border-radius:50px; font-size:11px; color:var(--blue-light); }
+  .card-footer { display:flex; align-items:center; justify-content:space-between; }
+  .card-price { font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; }
+  .card-price .old-price { font-size:16px; color:var(--text-muted); text-decoration:line-through; margin-right:8px; }
+  .card-price .current { background:linear-gradient(90deg,var(--blue-light),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .card-stars { font-size:12px; color:#fbbf24; margin-bottom:4px; }
+  .card-reviews { font-size:11px; color:var(--text-muted); }
+  .add-btn {
+    padding:10px 20px; background:linear-gradient(135deg,var(--blue),var(--cyan));
+    border:none; border-radius:8px; font-size:13px; font-weight:600; color:#fff;
+    cursor:pointer; transition:all .2s; white-space:nowrap;
+  }
+  .add-btn:hover { transform:scale(1.05); box-shadow:0 6px 20px rgba(37,99,235,0.4); }
+  .add-btn.added { background:linear-gradient(135deg,var(--green),#059669); }
+  .rating-row { display:flex; flex-direction:column; }
+
+  /* FEATURES */
+  .features-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:24px; }
+  .feature-card {
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:28px; transition:border-color .3s, transform .3s;
+  }
+  .feature-card:hover { border-color:rgba(6,182,212,0.4); transform:translateY(-4px); }
+  .feature-icon { width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:18px; }
+  .feature-card h3 { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; margin-bottom:8px; }
+  .feature-card p { font-size:14px; color:var(--text-muted); line-height:1.6; }
+
+  /* CART SIDEBAR */
+  .cart-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000;
+    opacity:0; pointer-events:none; transition:opacity .3s;
+    backdrop-filter:blur(6px);
+  }
+  .cart-overlay.open { opacity:1; pointer-events:all; }
+  .cart-sidebar {
+    position:fixed; top:0; right:0; bottom:0; width:420px; max-width:95vw;
+    background:var(--bg2); border-left:1px solid var(--border); z-index:2001;
+    transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1);
+    display:flex; flex-direction:column;
+  }
+  .cart-overlay.open .cart-sidebar { transform:translateX(0); }
+  .cart-header {
+    padding:24px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .cart-header h2 { font-family:'Rajdhani',sans-serif; font-size:24px; font-weight:700; }
+  .close-btn { width:36px; height:36px; background:var(--card); border:1px solid var(--border); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; transition:all .2s; }
+  .close-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+  .cart-items { flex:1; overflow-y:auto; padding:20px 24px; }
+  .cart-empty { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  .cart-empty .empty-icon { font-size:60px; margin-bottom:16px; opacity:.4; }
+  .cart-empty p { font-size:16px; }
+  .cart-item {
+    display:flex; gap:14px; align-items:center; padding:16px 0;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    animation:slideIn .3s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+  .ci-icon { width:48px; height:48px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .ci-info { flex:1; }
+  .ci-name { font-weight:600; font-size:15px; margin-bottom:2px; }
+  .ci-price { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; color:var(--cyan); }
+  .ci-remove { width:28px; height:28px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:6px; cursor:pointer; color:#f87171; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+  .ci-remove:hover { background:rgba(239,68,68,0.2); }
+  .cart-footer { padding:20px 24px; border-top:1px solid var(--border); }
+  .cart-total { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .cart-total span:first-child { color:var(--text-muted); font-size:15px; }
+  .cart-total-price { font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; background:linear-gradient(90deg,var(--blue-light),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .checkout-btn { width:100%; padding:15px; background:linear-gradient(135deg,var(--blue),var(--cyan)); border:none; border-radius:10px; font-size:16px; font-weight:700; color:#fff; cursor:pointer; transition:all .2s; font-family:'Rajdhani',sans-serif; letter-spacing:.5px; }
+  .checkout-btn:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(37,99,235,0.5); }
+
+  /* PAYMENT MODAL */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:3000;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity .3s; backdrop-filter:blur(10px);
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background:var(--bg2); border:1px solid var(--border); border-radius:20px;
+    width:100%; max-width:520px; max-height:90vh; overflow-y:auto;
+    transform:scale(0.9); transition:transform .3s;
+  }
+  .modal-overlay.open .modal { transform:scale(1); }
+  .modal-header { padding:28px 28px 0; display:flex; align-items:center; justify-content:space-between; }
+  .modal-header h2 { font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:700; }
+  .modal-body { padding:24px 28px 28px; }
+  .payment-tabs { display:flex; gap:10px; margin-bottom:28px; }
+  .pay-tab {
+    flex:1; padding:12px; border:1px solid var(--border); border-radius:10px;
+    cursor:pointer; background:var(--card); transition:all .2s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    font-size:14px; font-weight:500; color:var(--text-muted);
+  }
+  .pay-tab:hover, .pay-tab.active { border-color:var(--blue); color:var(--text); background:rgba(37,99,235,0.1); }
+  .pay-tab .tab-icon { font-size:20px; }
+  .form-group { margin-bottom:18px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  label { display:block; font-size:13px; font-weight:500; color:var(--text-muted); margin-bottom:7px; }
+  input[type=text], input[type=email], input[type=number], select {
+    width:100%; padding:12px 14px; background:var(--card); border:1px solid var(--border);
+    border-radius:10px; color:var(--text); font-size:14px; transition:border-color .2s;
+    outline:none; font-family:'Inter',sans-serif;
+  }
+  input::placeholder { color:var(--text-muted); }
+  input:focus, select:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+  select { appearance:none; }
+  .card-input-wrap { position:relative; }
+  .card-icons { position:absolute; right:12px; top:50%; transform:translateY(-50%); display:flex; gap:6px; font-size:20px; opacity:.6; }
+  .order-summary { background:var(--card); border-radius:12px; padding:18px; margin-bottom:22px; }
+  .order-summary h4 { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; margin-bottom:14px; }
+  .order-line { display:flex; justify-content:space-between; font-size:14px; color:var(--text-muted); margin-bottom:8px; }
+  .order-line.total { font-weight:600; color:var(--text); font-size:16px; border-top:1px solid var(--border); padding-top:12px; margin-top:8px; }
+  .order-line.total span:last-child { color:var(--cyan); font-family:'Rajdhani',sans-serif; font-size:20px; }
+  .secure-badge { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); margin-top:14px; justify-content:center; }
+  .paypal-section { text-align:center; padding:20px 0; }
+  .paypal-btn {
+    width:100%; padding:14px; background:#003087; border:none; border-radius:10px;
+    font-size:18px; font-weight:700; color:#fff; cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .paypal-btn:hover { background:#002060; transform:translateY(-1px); box-shadow:0 8px 25px rgba(0,48,135,.4); }
+  .paypal-logo { font-size:24px; }
+  .paypal-note { font-size:13px; color:var(--text-muted); margin-top:14px; }
+  .pay-btn {
+    width:100%; padding:15px; background:linear-gradient(135deg,var(--blue),var(--cyan));
+    border:none; border-radius:10px; font-size:16px; font-weight:700; color:#fff;
+    cursor:pointer; transition:all .2s; font-family:'Rajdhani',sans-serif; letter-spacing:.5px;
+    margin-top:4px;
+  }
+  .pay-btn:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(37,99,235,.5); }
+
+  /* SUCCESS */
+  .success-modal { text-align:center; padding:48px 32px; }
+  .success-icon { font-size:72px; margin-bottom:20px; animation:bounceIn .5s ease; }
+  @keyframes bounceIn { 0%{transform:scale(0)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
+  .success-modal h2 { font-family:'Rajdhani',sans-serif; font-size:32px; font-weight:700; margin-bottom:10px; }
+  .success-modal p { color:var(--text-muted); font-size:15px; line-height:1.6; margin-bottom:28px; }
+  .success-detail { background:var(--card); border-radius:10px; padding:16px; margin-bottom:24px; text-align:left; }
+  .success-detail-row { display:flex; justify-content:space-between; font-size:14px; padding:6px 0; }
+  .success-detail-row span:last-child { font-weight:600; color:var(--cyan); }
+
+  /* TESTIMONIALS */
+  .testimonials { background:var(--bg2); }
+  .testimonials-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:24px; }
+  .testimonial-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:28px; }
+  .t-stars { color:#fbbf24; font-size:16px; margin-bottom:14px; }
+  .t-quote { font-size:15px; color:var(--text-muted); line-height:1.7; margin-bottom:20px; font-style:italic; }
+  .t-author { display:flex; align-items:center; gap:12px; }
+  .t-avatar { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .t-name { font-weight:600; font-size:15px; }
+  .t-role { font-size:13px; color:var(--text-muted); }
+
+  /* FOOTER */
+  footer {
+    background:var(--card); border-top:1px solid var(--border);
+    padding:60px 5% 30px;
+  }
+  .footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px; margin-bottom:48px; }
+  .footer-brand { }
+  .footer-brand p { font-size:14px; color:var(--text-muted); line-height:1.7; margin-top:14px; max-width:260px; }
+  .footer-col h4 { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700; margin-bottom:16px; }
+  .footer-col ul { list-style:none; }
+  .footer-col li { margin-bottom:10px; }
+  .footer-col a { font-size:14px; color:var(--text-muted); transition:color .2s; }
+  .footer-col a:hover { color:var(--cyan); }
+  .footer-bottom { border-top:1px solid var(--border); padding-top:24px; display:flex; justify-content:space-between; align-items:center; }
+  .footer-bottom p { font-size:13px; color:var(--text-muted); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity:0; transform:translateY(20px); transition:opacity .6s ease, transform .6s ease; }
+  .fade-in.visible { opacity:1; transform:translateY(0); }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(100px);
+    background:var(--card); border:1px solid var(--green); border-radius:10px;
+    padding:14px 24px; font-size:14px; font-weight:500; color:var(--text);
+    z-index:4000; transition:transform .3s cubic-bezier(.4,0,.2,1);
+    display:flex; align-items:center; gap:10px; white-space:nowrap;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  .toast-icon { color:var(--green); font-size:18px; }
+
+  /* RESPONSIVE */
+  @media(max-width:768px) {
+    nav { padding:0 4%; }
+    .nav-links { display:none; }
+    .footer-grid { grid-template-columns:1fr 1fr; }
+    .hero-stats { gap:28px; }
+    .stat-num { font-size:28px; }
+    .form-row { grid-template-columns:1fr; }
+  }
+  @media(max-width:480px) {
+    .footer-grid { grid-template-columns:1fr; }
+    .hero-stats { flex-direction:column; gap:20px; }
+    .cart-sidebar { width:100%; }
+  }
+
+  /* Particles */
+  .particles { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .particle {
+    position:absolute; width:2px; height:2px; background:var(--cyan); border-radius:50%;
+    opacity:.6; animation:float linear infinite;
+  }
+  @keyframes float {
+    from { transform:translateY(100vh) translateX(0); opacity:0; }
+    10% { opacity:.6; }
+    90% { opacity:.6; }
+    to { transform:translateY(-10vh) translateX(var(--drift)); opacity:0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="logo-icon">RF</div>
+    <div class="logo-text">Revit<span>Forge</span></div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#extensions">Extensions</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#testimonials">Reviews</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="btn-ghost">Sign In</button>
+    <div class="cart-btn" onclick="toggleCart()">
+      🛒 Cart
+      <span class="cart-count" id="cartCount">0</span>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="scan-line"></div>
+  <div class="hero-glow"></div>
+  <div class="particles" id="particles"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="badge-dot"></span> Trusted by 12,000+ BIM Professionals</div>
+    <h1>Supercharge Your<br><span>Revit Workflow</span></h1>
+    <p>Professional-grade extensions that transform how you design, document, and collaborate. Built by engineers, for engineers.</p>
+    <div class="hero-btns">
+      <button class="btn-primary btn-large" onclick="scrollToExtensions()">Browse Extensions</button>
+      <button class="btn-ghost btn-large">Watch Demo →</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" data-target="50">0</div><div class="stat-label">Extensions</div></div>
+      <div class="stat"><div class="stat-num" data-target="12000">0</div><div class="stat-label">Active Users</div></div>
+      <div class="stat"><div class="stat-num" data-target="98">0</div><div class="stat-label">% Satisfaction</div></div>
+      <div class="stat"><div class="stat-num" data-target="4">0</div><div class="stat-label">Years Trusted</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXTENSIONS -->
+<section class="categories" id="extensions">
+  <div class="section-head fade-in">
+    <div class="section-label">Extensions Library</div>
+    <h2 class="section-title">Find the Right Tool</h2>
+    <p class="section-sub">From parametric automation to clash detection — every extension is Revit-native, rigorously tested.</p>
+  </div>
+  <div class="cat-tabs fade-in">
+    <button class="cat-tab active" onclick="filterProducts('all',this)">All Extensions</button>
+    <button class="cat-tab" onclick="filterProducts('automation',this)">Automation</button>
+    <button class="cat-tab" onclick="filterProducts('documentation',this)">Documentation</button>
+    <button class="cat-tab" onclick="filterProducts('structural',this)">Structural</button>
+    <button class="cat-tab" onclick="filterProducts('mep',this)">MEP</button>
+    <button class="cat-tab" onclick="filterProducts('visualization',this)">Visualization</button>
+  </div>
+  <div class="products-grid" id="productsGrid"></div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-head fade-in">
+    <div class="section-label">Why RevitForge</div>
+    <h2 class="section-title">Built for the Real Project</h2>
+    <p class="section-sub">Every feature is engineered to save time and reduce errors on live, complex BIM projects.</p>
+  </div>
+  <div class="features-grid fade-in">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(37,99,235,0.15)">⚡</div>
+      <h3>Instant Deployment</h3>
+      <p>One-click install directly into Revit. No manual DLL placement or registry edits needed.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(6,182,212,0.15)">🔄</div>
+      <h3>Lifetime Updates</h3>
+      <p>Every purchase includes perpetual updates. Compatible with Revit 2020 through 2025.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(16,185,129,0.15)">🛡️</div>
+      <h3>Secure Licensing</h3>
+      <p>Floating and named-user licenses with cloud activation. Transfer seats between machines easily.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(245,158,11,0.15)">💬</div>
+      <h3>Priority Support</h3>
+      <p>Dedicated BIM support team with 24-hour response SLA. Real engineers, not bots.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(239,68,68,0.15)">📦</div>
+      <h3>Bundle Deals</h3>
+      <p>Save up to 40% when purchasing extension bundles for your entire workflow vertical.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(139,92,246,0.15)">🔗</div>
+      <h3>API Integration</h3>
+      <p>Full REST API access for enterprise clients. Connect to Navisworks, BIM 360, and custom platforms.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials" id="testimonials">
+  <div class="section-head fade-in">
+    <div class="section-label">Customer Reviews</div>
+    <h2 class="section-title">Trusted by BIM Teams Worldwide</h2>
+  </div>
+  <div class="testimonials-grid fade-in">
+    <div class="testimonial-card">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-quote">"The Sheet Manager extension alone saved our team 8 hours per project. Absolutely indispensable for any serious documentation workflow."</p>
+      <div class="t-author">
+        <div class="t-avatar" style="background:rgba(37,99,235,0.2)">👷</div>
+        <div><div class="t-name">Marcus Thornton</div><div class="t-role">Senior BIM Manager, Aecom</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-quote">"Parametric Steel Pro changed how we model structural connections. The precision and speed is genuinely impressive — worth every dollar."</p>
+      <div class="t-author">
+        <div class="t-avatar" style="background:rgba(6,182,212,0.2)">🏗️</div>
+        <div><div class="t-name">Dr. Sarah Kim</div><div class="t-role">Principal Structural Engineer, WSP</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="t-stars">★★★★☆</div>
+      <p class="t-quote">"Customer support is world-class. They fixed a compatibility issue with our custom families within 3 hours. That level of service is rare."</p>
+      <div class="t-author">
+        <div class="t-avatar" style="background:rgba(16,185,129,0.2)">💡</div>
+        <div><div class="t-name">Priya Nair</div><div class="t-role">MEP Coordinator, Jacobs</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="contact">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="nav-logo"><div class="logo-icon">RF</div><div class="logo-text">Revit<span>Forge</span></div></div>
+      <p>Professional Revit extensions designed to accelerate BIM workflows and eliminate repetitive tasks.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Extensions</h4>
+      <ul>
+        <li><a href="#">Automation Tools</a></li>
+        <li><a href="#">Documentation</a></li>
+        <li><a href="#">Structural</a></li>
+        <li><a href="#">MEP Suite</a></li>
+        <li><a href="#">Visualization</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Partners</a></li>
+        <li><a href="#">Press</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Documentation</a></li>
+        <li><a href="#">API Reference</a></li>
+        <li><a href="#">Contact Support</a></li>
+        <li><a href="#">System Status</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 RevitForge. All rights reserved.</p>
+    <p style="color:var(--text-muted);font-size:13px;">Revit® is a trademark of Autodesk Inc.</p>
+  </div>
+</footer>
+
+<!-- CART SIDEBAR -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCartOnOverlay(event)">
+  <div class="cart-sidebar">
+    <div class="cart-header">
+      <h2>🛒 Your Cart</h2>
+      <button class="close-btn" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty"><div class="empty-icon">📦</div><p>Your cart is empty</p></div>
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total</span>
+        <span class="cart-total-price" id="cartTotal">$0</span>
+      </div>
+      <button class="checkout-btn" onclick="openPayment()">Proceed to Checkout →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal" id="paymentModalContent">
+    <div class="modal-header">
+      <h2>Secure Checkout</h2>
+      <button class="close-btn" onclick="closePayment()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="order-summary" id="orderSummaryModal"></div>
+      <div class="payment-tabs">
+        <button class="pay-tab active" onclick="switchPayTab('card',this)"><span class="tab-icon">💳</span> Card</button>
+        <button class="pay-tab" onclick="switchPayTab('paypal',this)"><span class="tab-icon">🅿️</span> PayPal</button>
+      </div>
+      <div id="cardForm">
+        <div class="form-group">
+          <label>Cardholder Name</label>
+          <input type="text" placeholder="John Anderson" id="cardName">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" placeholder="john@company.com" id="cardEmail">
+        </div>
+        <div class="form-group">
+          <label>Card Number</label>
+          <div class="card-input-wrap">
+            <input type="text" placeholder="1234 5678 9012 3456" id="cardNumber" maxlength="19" oninput="formatCard(this)">
+            <div class="card-icons">💳</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="text" placeholder="MM / YY" id="cardExpiry" maxlength="7" oninput="formatExpiry(this)">
+          </div>
+          <div class="form-group">
+            <label>CVV</label>
+            <input type="text" placeholder="•••" id="cardCvv" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Billing Country</label>
+          <select id="country">
+            <option>United States</option><option>United Kingdom</option><option>Canada</option><option>Australia</option><option>Germany</option><option>France</option><option>Other</option>
+          </select>
+        </div>
+        <button class="pay-btn" onclick="processPayment()">🔒 Pay Now</button>
+        <div class="secure-badge">🔒 256-bit SSL Encrypted · PCI DSS Compliant · Powered by Stripe</div>
+      </div>
+      <div id="paypalForm" style="display:none">
+        <div class="paypal-section">
+          <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">Click below to complete your purchase securely through PayPal. You'll be redirected to PayPal's secure checkout.</p>
+          <button class="paypal-btn" onclick="processPayPal()">
+            <span class="paypal-logo">🅿️</span>
+            <span style="color:#00C5E5;font-size:22px;font-weight:900;font-style:italic">Pay</span><span style="color:#003087;font-size:22px;font-weight:900;font-style:italic">Pal</span>
+          </button>
+          <p class="paypal-note">You'll review your order details before completing payment</p>
+        </div>
+        <div class="secure-badge" style="margin-top:20px">🔒 Secured by PayPal · Buyer Protection Included</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="success-modal">
+      <div class="success-icon">✅</div>
+      <h2>Payment Successful!</h2>
+      <p>Thank you for your purchase. Your license keys and download links have been sent to your email address.</p>
+      <div class="success-detail" id="successDetail"></div>
+      <button class="pay-btn" onclick="closeSuccess()">Back to Store</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span class="toast-icon">✓</span><span id="toastMsg"></span></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const products = [
+  { id:1, name:'BIM Automation Suite', category:'automation', icon:'⚙️', iconBg:'rgba(37,99,235,0.15)', glowColor:'rgba(37,99,235,0.4)', price:199, oldPrice:279, badge:'hot', rating:5, reviews:342, desc:'Automate repetitive modeling tasks with intelligent scripts. Batch renaming, mass placement, parameter population and more.', tags:['Batch Tools','Script Engine','Families'] },
+  { id:2, name:'Smart Sheet Manager', category:'documentation', icon:'📋', iconBg:'rgba(6,182,212,0.15)', glowColor:'rgba(6,182,212,0.4)', price:129, oldPrice:null, badge:'new', rating:5, reviews:187, desc:'Automate sheet creation, numbering, and revision management. Works across multi-discipline projects seamlessly.', tags:['Sheets','Revisions','Export'] },
+  { id:3, name:'Parametric Steel Pro', category:'structural', icon:'🏗️', iconBg:'rgba(245,158,11,0.15)', glowColor:'rgba(245,158,11,0.4)', price:249, oldPrice:319, badge:'sale', rating:4, reviews:221, desc:'Advanced parametric steel connection library with 200+ profiles, automatic load transfer calculations, and detailing outputs.', tags:['Connections','Profiles','Detailing'] },
+  { id:4, name:'MEP Clash Resolver', category:'mep', icon:'🔧', iconBg:'rgba(16,185,129,0.15)', glowColor:'rgba(16,185,129,0.4)', price:179, oldPrice:null, badge:null, rating:5, reviews:408, desc:'Real-time clash detection with automated route adjustment suggestions. Integrates directly with Navisworks reports.', tags:['Clash','Routes','Navisworks'] },
+  { id:5, name:'RenderForge Visualizer', category:'visualization', icon:'🎨', iconBg:'rgba(139,92,246,0.15)', glowColor:'rgba(139,92,246,0.4)', price:159, oldPrice:199, badge:'sale', rating:4, reviews:93, desc:'In-Revit real-time visualization with PBR materials, HDRI lighting, and one-click render presets for client presentations.', tags:['PBR','HDRI','Presentation'] },
+  { id:6, name:'Family Constructor', category:'automation', icon:'🔩', iconBg:'rgba(239,68,68,0.15)', glowColor:'rgba(239,68,68,0.4)', price:99, oldPrice:null, badge:'new', rating:5, reviews:156, desc:'Build parametric Revit families faster than ever with a visual editor and intelligent constraint propagation engine.', tags:['Families','Parameters','Editor'] },
+  { id:7, name:'Structural Analysis Link', category:'structural', icon:'📐', iconBg:'rgba(37,99,235,0.15)', glowColor:'rgba(37,99,235,0.4)', price:289, oldPrice:369, badge:'hot', rating:5, reviews:199, desc:'Bidirectional link between Revit Structure and ETABS/SAP2000/Robot. Sync analytical models with one click.', tags:['ETABS','SAP2000','Robot'] },
+  { id:8, name:'Duct & Pipe Router', category:'mep', icon:'💧', iconBg:'rgba(6,182,212,0.15)', glowColor:'rgba(6,182,212,0.4)', price:149, oldPrice:null, badge:null, rating:4, reviews:274, desc:'Intelligent auto-routing for HVAC ductwork and plumbing systems. Respects clearances, slopes, and coordination zones.', tags:['HVAC','Plumbing','Auto-route'] },
+  { id:9, name:'Quantity Takeoff Pro', category:'documentation', icon:'📊', iconBg:'rgba(16,185,129,0.15)', glowColor:'rgba(16,185,129,0.4)', price:189, oldPrice:229, badge:'sale', rating:5, reviews:318, desc:'Extract precise quantities directly from your Revit model. Export to Excel, Navis, or cost estimation software.', tags:['QTO','Excel','Cost'] },
+];
+
+let cart = [];
+
+// ─── RENDER PRODUCTS ─────────────────────────────────────────────────────────
+function renderProducts(filter='all') {
+  const grid = document.getElementById('productsGrid');
+  const filtered = filter === 'all' ? products : products.filter(p => p.category === filter);
+  grid.innerHTML = filtered.map(p => `
+    <div class="product-card ${cart.find(c=>c.id===p.id)?'in-cart':''}" id="card-${p.id}">
+      ${p.badge ? `<div class="card-badge badge-${p.badge}">${p.badge==='hot'?'🔥 Hot':p.badge==='new'?'✨ New':'💰 Sale'}</div>` : ''}
+      <div class="card-icon">
+        <div class="card-glow" style="background:${p.glowColor}"></div>
+        <div class="card-icon-inner" style="background:${p.iconBg}">${p.icon}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-category">${p.category.toUpperCase()}</div>
+        <div class="card-name">${p.name}</div>
+        <div class="card-desc">${p.desc}</div>
+        <div class="card-tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="card-footer">
+          <div>
+            <div class="rating-row">
+              <div class="card-stars">${'★'.repeat(p.rating)}${'☆'.repeat(5-p.rating)}</div>
+              <div class="card-reviews">${p.reviews.toLocaleString()} reviews</div>
+            </div>
+            <div class="card-price">
+              ${p.oldPrice?`<span class="old-price">$${p.oldPrice}</span>`:''}
+              <span class="current">$${p.price}</span>
+            </div>
+          </div>
+          <button class="add-btn ${cart.find(c=>c.id===p.id)?'added':''}" onclick="addToCart(${p.id})" id="btn-${p.id}">
+            ${cart.find(c=>c.id===p.id)?'✓ Added':'Add to Cart'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterProducts(cat, el) {
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderProducts(cat);
+}
+
+// ─── CART ────────────────────────────────────────────────────────────────────
+function addToCart(id) {
+  const p = products.find(x=>x.id===id);
+  if (cart.find(c=>c.id===id)) return;
+  cart.push(p);
+  updateCartUI();
+  const btn = document.getElementById(`btn-${id}`);
+  if(btn){ btn.textContent='✓ Added'; btn.classList.add('added'); }
+  const card = document.getElementById(`card-${id}`);
+  if(card) card.classList.add('in-cart');
+  showToast(`${p.icon} ${p.name} added to cart`);
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c=>c.id!==id);
+  updateCartUI();
+  const btn = document.getElementById(`btn-${id}`);
+  if(btn){ btn.textContent='Add to Cart'; btn.classList.remove('added'); }
+  const card = document.getElementById(`card-${id}`);
+  if(card) card.classList.remove('in-cart');
+}
+
+function updateCartUI() {
+  const count = cart.length;
+  const countEl = document.getElementById('cartCount');
+  countEl.textContent = count;
+  if(count>0){ countEl.classList.add('show'); } else { countEl.classList.remove('show'); }
+  const total = cart.reduce((s,c)=>s+c.price,0);
+  document.getElementById('cartTotal').textContent = `$${total}`;
+  const itemsEl = document.getElementById('cartItems');
+  if(cart.length===0){
+    itemsEl.innerHTML='<div class="cart-empty"><div class="empty-icon">📦</div><p>Your cart is empty</p></div>';
+  } else {
+    itemsEl.innerHTML = cart.map(c=>`
+      <div class="cart-item">
+        <div class="ci-icon" style="background:${c.iconBg}">${c.icon}</div>
+        <div class="ci-info">
+          <div class="ci-name">${c.name}</div>
+          <div class="ci-price">$${c.price}</div>
+        </div>
+        <button class="ci-remove" onclick="removeFromCart(${c.id})">✕</button>
+      </div>
+    `).join('');
+  }
+}
+
+function toggleCart() {
+  document.getElementById('cartOverlay').classList.toggle('open');
+}
+function closeCartOnOverlay(e) {
+  if(e.target===document.getElementById('cartOverlay')) toggleCart();
+}
+
+// ─── PAYMENT ─────────────────────────────────────────────────────────────────
+function openPayment() {
+  if(cart.length===0){ showToast('Your cart is empty!'); return; }
+  toggleCart();
+  updateOrderSummary();
+  document.getElementById('paymentModal').classList.add('open');
+}
+function closePayment() { document.getElementById('paymentModal').classList.remove('open'); }
+
+function updateOrderSummary() {
+  const total = cart.reduce((s,c)=>s+c.price,0);
+  const items = cart.map(c=>`<div class="order-line"><span>${c.icon} ${c.name}</span><span>$${c.price}</span></div>`).join('');
+  document.getElementById('orderSummaryModal').innerHTML = `
+    <h4>Order Summary</h4>
+    ${items}
+    <div class="order-line"><span>Processing fee</span><span>$0</span></div>
+    <div class="order-line total"><span>Total</span><span>$${total}</span></div>
+  `;
+}
+
+function switchPayTab(type, el) {
+  document.querySelectorAll('.pay-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('cardForm').style.display = type==='card'?'block':'none';
+  document.getElementById('paypalForm').style.display = type==='paypal'?'block':'none';
+}
+
+function formatCard(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,16);
+  el.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+function formatExpiry(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,4);
+  if(v.length>2) v = v.slice(0,2)+' / '+v.slice(2);
+  el.value = v;
+}
+
+function processPayment() {
+  const name = document.getElementById('cardName').value.trim();
+  const email = document.getElementById('cardEmail').value.trim();
+  const num = document.getElementById('cardNumber').value.trim();
+  const exp = document.getElementById('cardExpiry').value.trim();
+  const cvv = document.getElementById('cardCvv').value.trim();
+  if(!name||!email||num.length<19||!exp||!cvv){ showToast('⚠️ Please fill in all payment details'); return; }
+  completePayment(email, 'Credit/Debit Card');
+}
+function processPayPal() {
+  completePayment('your PayPal email', 'PayPal');
+}
+
+function completePayment(contact, method) {
+  closePayment();
+  const total = cart.reduce((s,c)=>s+c.price,0);
+  const itemNames = cart.map(c=>c.name).join(', ');
+  const orderId = 'RF-'+Math.random().toString(36).substr(2,8).toUpperCase();
+  document.getElementById('successDetail').innerHTML = `
+    <div class="success-detail-row"><span>Order ID</span><span>${orderId}</span></div>
+    <div class="success-detail-row"><span>Payment Method</span><span>${method}</span></div>
+    <div class="success-detail-row"><span>Extensions</span><span>${cart.length} license(s)</span></div>
+    <div class="success-detail-row"><span>Total Charged</span><span>$${total}</span></div>
+    <div class="success-detail-row"><span>Confirmation sent to</span><span>${contact}</span></div>
+  `;
+  document.getElementById('successModal').classList.add('open');
+  cart = [];
+  updateCartUI();
+  renderProducts();
+}
+
+function closeSuccess() {
+  document.getElementById('successModal').classList.remove('open');
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 2800);
+}
+
+// ─── SCROLL ANIMATION ────────────────────────────────────────────────────────
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:0.15});
+document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+
+// ─── COUNTER ANIMATION ───────────────────────────────────────────────────────
+function animateCounters() {
+  document.querySelectorAll('[data-target]').forEach(el=>{
+    const target = parseInt(el.getAttribute('data-target'));
+    const duration = 1800;
+    const step = target / (duration / 16);
+    let current = 0;
+    const timer = setInterval(()=>{
+      current = Math.min(current+step, target);
+      el.textContent = target>=1000 ? Math.round(current).toLocaleString() : (target===98 ? Math.round(current)+'%' : Math.round(current)+'+');
+      if(current>=target) clearInterval(timer);
+    },16);
+  });
+}
+let countersStarted = false;
+const heroObserver = new IntersectionObserver((entries)=>{
+  if(entries[0].isIntersecting && !countersStarted){ countersStarted=true; setTimeout(animateCounters,700); }
+});
+heroObserver.observe(document.querySelector('.hero'));
+
+// ─── PARTICLES ───────────────────────────────────────────────────────────────
+function createParticles() {
+  const container = document.getElementById('particles');
+  for(let i=0;i<20;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    const x = Math.random()*100;
+    const delay = Math.random()*10;
+    const duration = 8+Math.random()*12;
+    const drift = (Math.random()-0.5)*200;
+    p.style.cssText=`left:${x}%;animation-duration:${duration}s;animation-delay:-${delay}s;--drift:${drift}px;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;`;
+    container.appendChild(p);
+  }
+}
+
+function scrollToExtensions() {
+  document.getElementById('extensions').scrollIntoView({behavior:'smooth'});
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderProducts();
+createParticles();
+
+// Re-observe fade-in elements after render
+setTimeout(()=>{
+  document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+},100);
+</script>
+</body>
+</html>
